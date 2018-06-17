@@ -1,0 +1,409 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using Word = Microsoft.Office.Interop.Word;
+using ToolGood.Words;
+using System.Text.RegularExpressions;
+using System.Threading;
+
+namespace 标题处理
+{
+    public partial class Form1 : Form
+    {
+        public static int time_count = 0;//计时器时间，暂时没有用
+        private static int AddType = 0;//与子窗口转递信息用的值,插入关键字的方式
+        private static int Rate = 0;//与子窗口转递信息用的值，每个标题是否插入关键字的概率
+        private static List<string> TitleStrList=new List<string> ();//用List来存储标题，List内容要与textbox的内容保持一致
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void OneKeyClearEnWords_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OneKeyClearNum_Click(object sender, EventArgs e)
+        {
+            string InsertStr = MaintextBox.Text;
+            string ChangedStr = Regex.Replace(InsertStr, @"\d", "");
+            //StringSearch iwords = new StringSearch();
+            //string keywords = "0|1|2|3|4|5|6|7|8|9";
+            //iwords.SetKeywords(keywords.Split('|'));
+            //string ChangedStr = iwords.Replace(InsertStr, ' ');
+            //ChangedStr = ChangedStr.Replace("\r\n", "");
+            MaintextBox.Text = ChangedStr;
+            SaveChange(ChangedStr);
+        }
+
+        private void OneKeyClearPunctuation_Click(object sender, EventArgs e)
+        {
+            string InsertStr = MaintextBox.Text;
+            StringSearch iwords = new StringSearch();
+            string keywords = "!|@|#|$|%|^|&|*|(|)|、|“|”|+|……|！|#|￥|（|）| |";
+            iwords.SetKeywords(keywords.Split('|'));
+            string ChangedStr = iwords.Replace(InsertStr, ' ');
+            //ChangedStr = ChangedStr.Replace("\r\n", "");
+            ChangedStr = ChangedStr.Replace(" ", "");
+            MaintextBox.Text = ChangedStr;
+            SaveChange(ChangedStr);
+        }
+
+        private void OneKeyAddKeyWords_Click(object sender, EventArgs e)
+        {
+            AddWayForm adddwayform= new AddWayForm();
+            // this.Visible = false;
+            adddwayform.ShowDialog(this);
+            string keyword_1 = KeyWordsOne.Text;
+            string keyword_2 = KeyWordsTwo.Text;
+            string keyword_3 = KeyWordThree.Text;
+            int addway = 1;//默认从前添加
+            if (checkBox3.Checked)//从后添加
+            {
+                addway = 3;
+            }
+            if (radioButton1.Checked)//如果大于三十就删除最后几个
+            {
+                addway = addway * 3;
+            }
+            else if (radioButton2.Checked)//如果大于三十就不添加（要先判断）【如果原标题28字符以上就一个都不加】
+            {
+                addway = addway * 5;
+            }//3（前，删除最后几个），5（前，大于三十不添加），9(后，删除最后几个)，15（后，大于三十不添加）
+            GetAddstr(addway, keyword_1, keyword_2, keyword_3);
+            AddType = 0;//重置值
+            MaintextBox.Text = FormatStr(TitleStrList);//显示到textbox
+        }
+
+        //添加关键字的逻辑方法
+        private void GetAddstr(int addway, string kword1, string kword2, string kword3)
+        {
+
+            if (AddType == 5)//关键字顺序排序，顺序添加
+            {
+                for (int i = 0; i < TitleStrList.Count(); i++)
+                {
+                    TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword1, kword2, kword3);//修改List
+                }
+            }
+            else if (AddType == 15)//关键字随机排序 顺序添加
+            {
+                Random ran = new Random();
+                for (int i = 0; i < TitleStrList.Count(); i++)
+                {
+                    int RandKey = ran.Next(0, 5);//在0-5中产生1个随机数
+                    if (RandKey == 0)
+                    {
+                        TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword1, kword2, kword3);//修改List
+                    }
+                    else if (RandKey == 1)
+                    {
+                        TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword1, kword3, kword2);
+                    }
+                    else if (RandKey == 2)
+                    {
+                        TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword2, kword1, kword3);
+                    }
+                    else if (RandKey == 3)
+                    {
+                        TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword2, kword3, kword1);
+                    }
+                    else if (RandKey == 4)
+                    {
+                        TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword3, kword1, kword2);
+                    }
+                    else if (RandKey == 5)
+                    {
+                        TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword3, kword2, kword1);
+                    }
+                    //Thread.Sleep(1);
+                }
+
+            }
+            else if (AddType == 7)//关键字顺序排序，随机添加
+            {
+                int[] randary = GetRandAry();
+                for (int i = 0; i < TitleStrList.Count(); i++)
+                {
+                    if (randary.Contains(i))
+                        TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword1, kword2, kword3);//随机添加关键字
+                }
+            }
+            else if (AddType == 21)//关键字随机排序，随机添加
+            {
+                int[] randary = GetRandAry();
+                for (int i = 0; i < TitleStrList.Count(); i++)
+                {
+                    if (randary.Contains(i))
+                    {
+                        Random ran = new Random();
+                        int RandKey = ran.Next(0, 5);//在0-5中产生1个随机数
+                        if (RandKey == 0)
+                        {
+                            TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword1, kword2, kword3);//修改List
+                        }
+                        else if (RandKey == 1)
+                        {
+                            TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword1, kword3, kword2);
+                        }
+                        else if (RandKey == 2)
+                        {
+                            TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword2, kword1, kword3);
+                        }
+                        else if (RandKey == 3)
+                        {
+                            TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword2, kword3, kword1);
+                        }
+                        else if (RandKey == 4)
+                        {
+                            TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword3, kword1, kword2);
+                        }
+                        else if (RandKey == 5)
+                        {
+                            TitleStrList[i] = AddByWay(addway, TitleStrList[i], kword3, kword2, kword1);
+                        }
+                    }
+                }
+            }
+        }
+
+        private int[] GetRandAry()
+        {
+            int Count = TitleStrList.Count();
+            decimal AddCount = Math.Ceiling(Convert.ToDecimal(Convert.ToDecimal(Rate) / 10) * Count);//计算添加个数
+            Random ran = new Random();
+            int[] RandAry = new int[Convert.ToInt32(AddCount)];
+            for (int i = 0; i < AddCount; i++)
+            {
+                int randkey = ran.Next(0, (Count - 1));//产生1个随机数
+                if (RandAry.Contains(randkey))
+                    i--;
+                else
+                    RandAry[i] = randkey;//产生添加个数个不同的随机数
+            }
+            return
+                RandAry;
+        }
+        private string AddByWay(int addway,string titlestr,string kword1,string kword2,string kword3)
+        {
+           string AddStr = kword1 + kword2 + kword3;
+            if (addway == 3 || addway == 9)//删除最后几个
+            {
+                if (AddStr.Length + titlestr.Length > 30)
+                {
+                    int RemoveLength = (AddStr.Length + titlestr.Length) - 30;
+                    string DealedStr = titlestr.Substring(0, titlestr.Length - RemoveLength);
+                    if (addway == 3)
+                        return AddFromHead(DealedStr, AddStr);
+                    return AddFromTail(DealedStr, AddStr);
+                }
+                if (addway == 3)
+                    return AddFromHead(titlestr, AddStr);
+                return AddFromTail(titlestr, AddStr);
+            }
+            else //大于30不添加
+            {
+
+                if (titlestr.Length > 28)
+                    return titlestr;//大于28字符的原值返回
+                if (titlestr.Length + kword1.Length > 30)
+                    return titlestr;
+                if (titlestr.Length + kword1.Length + kword2.Length > 30)
+                {
+                    if (addway == 5)
+                        return AddFromHead(titlestr, kword1);
+                    return AddFromTail(titlestr, kword1);
+                }
+                if (titlestr.Length + AddStr.Length > 30)
+                {
+                    if (addway == 5)
+                        return AddFromHead(titlestr, kword1 + kword2);
+                    return AddFromTail(titlestr, kword1 + kword2);
+                }
+                if (addway == 5)
+                    return AddFromHead(titlestr, AddStr);
+                return AddFromTail(titlestr, AddStr);
+            }
+        }
+        private string AddFromHead(string itemstr, string kword)//从前添加关键词
+        {
+            return kword + itemstr;
+        }
+        private string AddFromTail(string itemstr, string kword)//从后添加关键词
+        {
+            return  itemstr+kword;
+        }
+        private void CheckHistoryWords_Click(object sender, EventArgs e)
+        {
+            HistoryWordsForm historywordsform = new HistoryWordsForm();
+           // this.Visible = false;
+            historywordsform.ShowDialog();
+           // this.Visible = true;
+        }
+
+        private void checkBox3_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void DelectMoreThen30_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Insert_Click(object sender, EventArgs e)//在这里写导入文件的代码
+        {
+            TitleStrList = new List<string>();
+            OpenFileDialog Opennewfile = new OpenFileDialog();
+            Opennewfile.Filter= "文本文件(*.txt)|*.txt|Word文档(*.doc;*.docx)|*.doc;*.docx";
+            string InsertStr=null;
+            if (Opennewfile.ShowDialog() == DialogResult.OK)
+            {
+                //获取用户选择文件的路径
+                string extension = Path.GetFullPath(Opennewfile.FileName);
+                string doctype = extension.Substring(extension.Length - 4, 4);
+                //r如果读取的是txt文件
+                string InsertLine = string.Empty;
+                if (doctype==".txt"||doctype==".TXT")
+                {
+                    StreamReader sr = new StreamReader(extension, Encoding.GetEncoding("gb2312"));
+                    while ((InsertLine = sr.ReadLine()) != null)
+                    {
+                        TitleStrList.Add(InsertLine.Trim());//逐行读取标题放入list
+                    }
+                    sr.Close();
+                    MaintextBox.Text = FormatStr(TitleStrList);
+                }
+                else//剩下的word文件
+                {
+                    try
+                    {
+                        Word.Application WordApp = new Word.Application();
+                        Word.Document doc = null;
+                        object unknow = Type.Missing;
+                        WordApp.Visible = false;
+                        object filepath = extension;
+                        doc = WordApp.Documents.Open(ref filepath,
+                             ref unknow, ref unknow, ref unknow, ref unknow,
+                             ref unknow, ref unknow, ref unknow, ref unknow,
+                             ref unknow, ref unknow, ref unknow, ref unknow,
+                             ref unknow, ref unknow, ref unknow);
+                        InsertStr = doc.Content.Text;
+                        MaintextBox.Text = InsertStr;
+                        int i = 0;
+                        while ((InsertLine = doc.Sentences[i].Text.Trim()) != null)
+                        {
+                            TitleStrList.Add(InsertLine);
+                            i++;
+                        }
+                        doc.Close(ref unknow, ref unknow, ref unknow);
+                        WordApp.Quit();
+                        MaintextBox.Text = FormatStr(TitleStrList);
+                    }
+                    catch(Exception ex)
+                    {
+                        InsertStr = "出现错误！请检查文件。" + ex;
+                        MaintextBox.Text = InsertStr;
+                    }
+                }
+            }
+        }
+
+        private void ClearAll_Click(object sender, EventArgs e)
+        {
+            MaintextBox.Text = null;
+            TitleStrList =null;
+        }
+
+        private void OneKeyCopy_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Clipboard.SetDataObject(MaintextBox.Text);
+                toolTip1.Show("复制到粘贴板成功!", MaintextBox);
+            }
+            catch(Exception ex)
+            {
+                ToolTip tooltip = new ToolTip();
+                tooltip.Show("出现错误，请重试" + ex, MaintextBox);
+
+            }
+        }
+        private void Hidetooltip(object sender, EventArgs e)
+        {
+           toolTip1.Hide(MaintextBox);
+        }
+        private void OneKeyReplace_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void DirtyWordsBase_Click(object sender, EventArgs e)
+        {
+            WordsBaseForm wordsbasefrom = new WordsBaseForm();
+           // this.Visible=false;
+            wordsbasefrom.ShowDialog();
+           // this.Visible = true;
+        }
+
+        private void DeleteDirtyWordsBase_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private string FormatStr(List<string> InsertStrList)
+        {
+            string FormattedStr;
+            try
+            {
+
+                if (InsertStrList.Count > 1)
+                {
+                    string FinalStr = InsertStrList[0];
+                    for (int i = 1; i < InsertStrList.Count(); i++)
+                    {
+                        FinalStr += "\r\n" + InsertStrList[i];
+                    }
+                    FormattedStr = FinalStr;
+                }
+                else
+                {
+                    FormattedStr = InsertStrList[0];
+                }
+            }
+            catch (Exception ex)
+            {
+                FormattedStr = "没有检测到标题文件，请导入后重试！" + "\r\n" + ex;
+            }
+            return FormattedStr;
+        }
+
+        private void SaveChange(string InsertStr)
+        {
+            string[] SplitStr = InsertStr.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);//去掉空项
+            for (int i = 0; i < SplitStr.Count(); i++)
+            {
+                string NewItem = SplitStr[i].Replace("\r", "");
+                TitleStrList[i] = NewItem;
+            }
+        }
+        public void GetAddWay(int type)
+        {
+            AddType = type;
+        }
+        public void GetRate(int rate)
+        {
+            Rate = rate;
+        }
+    }
+
+}

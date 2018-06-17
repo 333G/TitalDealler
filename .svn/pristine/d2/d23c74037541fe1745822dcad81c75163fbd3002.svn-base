@@ -1,0 +1,45 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace 标题处理
+{
+    public partial class AddWayForm : Form
+    {
+        public AddWayForm()
+        {
+            InitializeComponent();
+        }
+
+        private void confimbutton_Click(object sender, EventArgs e)
+        {
+            int Ordertype = 1;//默认为1，顺序
+            int LocationType = 5;
+            if (radioButton5.Checked)
+            {
+                Ordertype = 3;
+            }
+            if (radioButton3.Checked)
+            {
+                LocationType = 7;
+            }
+            int type = Ordertype * LocationType;//传递给住窗口值
+            Form1 f1 = (Form1)this.Owner;// 将本窗体的拥有者强制设为Form1类的实例f1
+            f1.GetAddWay(type);
+            this.Close();
+        }
+
+        private void cancelbutton_Click(object sender, EventArgs e)
+        {
+            Form1 f1 = (Form1)this.Owner;// 将本窗体的拥有者强制设为Form1类的实例f1
+            f1.GetAddWay(0);
+            this.Close();
+        }
+    }
+}

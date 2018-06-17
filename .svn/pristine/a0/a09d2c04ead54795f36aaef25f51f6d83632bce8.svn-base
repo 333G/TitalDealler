@@ -1,0 +1,118 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace 标题处理
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void OneKeyClearWord_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OneKeyClearNum_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OneKeyClearPunctuation_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OneKeyAddKeyWords_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void CheckHistoryWords_Click(object sender, EventArgs e)
+        {
+            HistoryWordsForm historywordsform = new HistoryWordsForm();
+           // this.Visible = false;
+            historywordsform.ShowDialog();
+           // this.Visible = true;
+        }
+
+        private void checkBox3_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void DelectMoreThen30_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Insert_Click(object sender, EventArgs e)//在这里写导入文件的代码
+        {
+            OpenFileDialog Opennewfile = new OpenFileDialog();
+            Opennewfile.Filter= "Word文档(*.doc;*.docx)|*.doc;*.docx|文本文件(*.txt)|*.txt";
+            if (Opennewfile.ShowDialog() == DialogResult.OK)
+            {
+                //获取用户选择文件的路径
+                string extension = Path.GetFullPath(Opennewfile.FileName);
+
+                string InsertStr;
+                //r如果读取的是txt文件
+                string[] str = { ".txt"};
+                if (((IList)str).Contains(extension))
+                {
+                    StreamReader sr = new StreamReader(extension, false);
+                    InsertStr = sr.ReadLine().ToString();
+                    sr.Close();
+                    MaintextBox.Text = InsertStr;
+                }
+                else//剩下的word文件
+                {
+                    
+                }
+            }
+            else
+            {
+
+            }
+        }
+
+        private void ClearAll_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OneKeyCopy_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OneKeyReplace_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void DirtyWordsBase_Click(object sender, EventArgs e)
+        {
+            WordsBaseForm wordsbasefrom = new WordsBaseForm();
+           // this.Visible=false;
+            wordsbasefrom.ShowDialog();
+           // this.Visible = true;
+        }
+
+        private void DeleteDirtyWordsBase_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
+}

@@ -1,0 +1,36 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace 标题处理
+{
+    public partial class HistoryWordsForm : Form
+    {
+        public HistoryWordsForm()
+        {
+            InitializeComponent();
+        }
+
+        private void HistoryWordsForm_Load(object sender, EventArgs e)
+        {
+            string extension = System.Windows.Forms.Application.StartupPath;
+            try
+            {
+                StreamReader sr = new StreamReader(extension + "\\HisToryKeyword.txt", Encoding.GetEncoding("gb2312"));
+                textBox1.Text = sr.ReadToEnd();
+                sr.Close();
+            }
+            catch//没有读取到文件
+            {
+                textBox1.Text = "没有找到历史文件！";
+            }
+        }
+    }
+}

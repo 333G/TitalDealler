@@ -1,0 +1,15 @@
+2016-06-29：version 0.38.2
+1. 资源文件的目录配置支持相对路径：https://github.com/anderscui/jieba.NET/issues/5；
+
+2016-06-29：version 0.38.1
+1. 修复一个词性标注的issue：https://github.com/anderscui/jieba.NET/issues/6；
+2. 简化配置文件
+
+2016-01-04: version 0.38
+1. 扩充识别的汉字unicode范围：[\u4E00-\u9FD5];
+2. 修复load_userdict加载用户词典不能识别含有空格等特殊字符的问题;
+3. 支持命令行分词;
+
+2015-09-18：v0.37.1
+1) 完整实现jieba分词（Python版）的第一个版本
+2) 发布到了NuGet
